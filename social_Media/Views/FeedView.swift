@@ -39,9 +39,32 @@ struct FeedView: View {
                 if viewModel.isLoading && viewModel.posts.isEmpty {
                     LoadingView()
                 }
+                
+                // Offline indicator
+                if viewModel.offlineStorage.isOfflineMode {
+                    VStack {
+                        HStack {
+                            Spacer()
+                            HStack(spacing: 8) {
+                                Image(systemName: "wifi.slash")
+                                    .foregroundColor(.orange)
+                                Text("Offline Mode")
+                                    .font(.caption)
+                                    .foregroundColor(.orange)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color.orange.opacity(0.1))
+                            .cornerRadius(12)
+                            .padding()
+                        }
+                        Spacer()
+                    }
+                }
             }
             .navigationTitle("Social Feed")
             .navigationBarTitleDisplayMode(.large)
+
             .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
                 Button("OK") {
                     viewModel.errorMessage = nil

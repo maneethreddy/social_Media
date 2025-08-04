@@ -10,6 +10,7 @@ class FeedViewModel: ObservableObject {
     
     // Complex state management
     @Published var appState: AppStateManager
+    @Published var offlineStorage: OfflineStorageService
     
     private let postService = PostService()
     private var cancellables = Set<AnyCancellable>()
@@ -18,6 +19,8 @@ class FeedViewModel: ObservableObject {
     
     init() {
         self.appState = AppStateManager()
+        self.offlineStorage = OfflineStorageService()
+        setupOfflineObservers()
         loadPosts()
     }
     
@@ -44,6 +47,9 @@ class FeedViewModel: ObservableObject {
                     self?.posts.append(contentsOf: newPosts)
                     self?.hasMorePosts = newPosts.count == self?.postsPerPage
                     self?.currentPage += 1
+                    
+                    // Save posts offline for future use
+                    self?.savePostsOffline()
                 }
             )
             .store(in: &cancellables)
@@ -73,6 +79,9 @@ class FeedViewModel: ObservableObject {
                     self?.posts = newPosts
                     self?.hasMorePosts = newPosts.count == self?.postsPerPage
                     self?.currentPage += 1
+                    
+                    // Save posts offline for future use
+                    self?.savePostsOffline()
                 }
             )
             .store(in: &cancellables)
@@ -116,4 +125,64 @@ class FeedViewModel: ObservableObject {
             return "\(count)"
         }
     }
-} 
+    
+    // MARK: - Offline Support
+    
+    private func setupOfflineObservers() {
+        // Monitor offline storage changes
+        offlineStorage.$isOfflineMode
+            .sink { [weak self] isOffline in
+                self?.handleOfflineModeChange(isOffline)
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func handleOfflineModeChange(_ isOffline: Bool) {
+        if isOffline {
+            appState.transitionToOffline()
+        } else {
+            appState.transitionToPopulated()
+        }
+    }
+    
+    func loadOfflinePosts() {
+        let offlinePosts = offlineStorage.loadPosts()
+        if !offlinePosts.isEmpty {
+            posts = offlinePosts
+            appState.transitionToPopulated()
+        } else {
+            appState.transitionToEmpty()
+        }
+    }
+    
+    func savePostsOffline() {
+        offlineStorage.savePosts(posts)
+    }
+    
+    func likePostOffline(_ post: Post) {
+        let operation = PendingOperation(
+            type: .likePost,
+            data: ["postId": post.id, "isLiked": "true"]
+        )
+        offlineStorage.addPendingOperation(operation)
+        
+        // Update local state immediately for better UX
+        if let index = posts.firstIndex(where: { $0.id == post.id }) {
+            var updatedPost = posts[index]
+            // Update like status
+            posts[index] = updatedPost
+        }
+    }
+    
+    // MARK: - Testing Methods
+    
+    func simulateOfflineMode() {
+        offlineStorage.isOfflineMode = true
+        appState.transitionToOffline()
+    }
+    
+    func simulateOnlineMode() {
+        offlineStorage.isOfflineMode = false
+        appState.transitionToPopulated()
+    }
+}

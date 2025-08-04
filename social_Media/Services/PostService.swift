@@ -54,7 +54,11 @@ class PostService: ObservableObject {
             "The only way to learn a new programming language is by writing programs in it.",
             "Code is read much more often than it is written. Make it readable! 📖",
             "Just deployed my first app to the App Store! The journey has been incredible. 🎉",
-            "SwiftUI has completely changed how I think about iOS development. The declarative approach is game-changing!"
+            "SwiftUI has completely changed how I think about iOS development. The declarative approach is game-changing!",
+            "Check out this amazing video tutorial on iOS development! Watch this to learn more about SwiftUI and Combine.",
+            "Just recorded a new video about Metal shader programming. Watch this if you're interested in graphics programming!",
+            "New video uploaded: Building a social media app from scratch with MVVM architecture. Watch now!",
+            "Video tutorial: How to implement real-time updates in iOS apps using WebSockets and Combine."
         ]
         
         var posts: [Post] = []
@@ -67,9 +71,23 @@ class PostService: ObservableObject {
             let randomShares = Int.random(in: 0...50)
             let randomTimestamp = Date().addingTimeInterval(-Double.random(in: 0...86400 * 7)) // Last 7 days
             
-            // Randomly add media to some posts
+            // Determine post type and media
+            let isVideoPost = randomContent.lowercased().contains("video") || 
+                             randomContent.lowercased().contains("watch") ||
+                             randomContent.lowercased().contains("tutorial")
+            
             let hasMedia = Bool.random()
-            let mediaURLs = hasMedia ? [mockImages.randomElement()!] : nil
+            let mediaURLs: [String]?
+            
+            if isVideoPost {
+                // Video posts get video placeholder
+                mediaURLs = ["video_placeholder"]
+            } else if hasMedia {
+                // Regular posts get images
+                mediaURLs = [mockImages.randomElement()!]
+            } else {
+                mediaURLs = nil
+            }
             
             let post = Post(
                 author: randomUser,

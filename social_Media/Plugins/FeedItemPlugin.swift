@@ -343,19 +343,26 @@ struct VideoPostCardView: View {
             
             // Video placeholder
             Rectangle()
-                .fill(Color.gray.opacity(0.3))
+                .fill(Color.black.opacity(0.8))
                 .frame(height: 200)
                 .overlay(
-                    VStack {
+                    VStack(spacing: 12) {
                         Image(systemName: "play.circle.fill")
-                            .font(.system(size: 50))
+                            .font(.system(size: 60))
                             .foregroundColor(.white)
                         Text("Video Content")
-                            .font(.caption)
+                            .font(.headline)
                             .foregroundColor(.white)
+                        Text("Tap to play")
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.8))
                     }
                 )
                 .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                )
             
             // Action buttons
             HStack(spacing: 20) {
